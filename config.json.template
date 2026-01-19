@@ -1,0 +1,8 @@
+{
+    "target_url": "https://www.kiv.zcu.cz/studies/predmety/pc/results.php",
+    "login_url": "https://shib.zcu.cz/idp/profile/oidc/authorize?execution=e1s1",
+    "my_student_id": "A00B0000P",
+    "discord_user_id_to_ping": "000000000000000000",
+    "check_interval_seconds": 60,
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+}

@@ -1,0 +1,18 @@
+services:
+  watchdog:
+    build: .
+    container_name: pc-watchdog
+    restart: unless-stopped
+    volumes:
+      # Mapování konfiguračních souborů z hostitele do kontejneru
+      - ./config.json:/app/config.json
+      - ./.env:/app/.env
+      - ./users.json:/app/users.json
+      # Runtime soubory (generované aplikací)
+      - ./cookies.json:/app/cookies.json
+      - ./history.json:/app/history.json
+      - ./monitor.log:/app/monitor.log
+    environment:
+      # Nastavení pro webdriver-manager a časovou zónu
+      - WDM_LOG=0
+      - TZ=Europe/Prague

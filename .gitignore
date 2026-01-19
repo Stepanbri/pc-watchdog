@@ -1,0 +1,39 @@
+# ===========================================
+# Citlivé soubory (NIKDY necommitovat!)
+# ===========================================
+
+# Přihlašovací údaje a webhooky
+.env
+
+# Konfigurace s osobními údaji
+config.json
+users.json
+
+# Runtime soubory (generované aplikací)
+cookies.json
+history.json
+monitor.log
+
+# ===========================================
+# Python
+# ===========================================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+
+# ===========================================
+# IDE a editory
+# ===========================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
