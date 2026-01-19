@@ -1,16 +1,6 @@
 """
-KIV/PC Watchdog - Monitor výsledků semestrální práce
-=====================================================
-
 Tento skript monitoruje webovou stránku s výsledky předmětu KIV/PC na ZČU
 a odesílá Discord notifikace při změně hodnocení.
-
-Funkce:
-- Automatické přihlášení přes Shibboleth SSO (ZČU)
-- Parsování tabulky s výsledky
-- Detekce změn v hodnocení
-- Discord notifikace s embed zprávami
-- Podpora Docker kontejneru
 """
 
 import os
