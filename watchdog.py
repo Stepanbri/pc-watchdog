@@ -47,7 +47,8 @@ class Colors:
 # Logy se zapisují do souboru i konzole (důležité pro Docker)
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
+    format='[%(asctime)s] %(levelname)s - %(message)s',
+    datefmt='%d.%m.%Y %H:%M',
     handlers=[
         logging.FileHandler("monitor.log", encoding='utf-8'),
         logging.StreamHandler(sys.stdout)
@@ -76,7 +77,7 @@ USERS_FILE = 'users.json'       # Mapování student_id -> discord_user_id
 def print_banner():
     """Vypíše úvodní banner aplikace."""
     banner = f"""{Colors.CYAN}{Colors.BOLD}
-    WATCHDOG v3.5 (Docker Friendly) | {platform.system()}
+    WATCHDOG v3.7 (Error Alerts) | {platform.system()}
     {Colors.ENDC}"""
     print(banner)
 
@@ -108,8 +109,39 @@ class KIVMonitor:
     
     def log_to_console(self, message, color=Colors.ENDC):
         """Vypisuje zprávy do konzole s časem a barvou."""
-        timestamp = datetime.now().strftime('%H:%M:%S')
+        timestamp = datetime.now().strftime('%d.%m.%Y %H:%M')
         print(f"{Colors.BLUE}[{timestamp}]{Colors.ENDC} {color}{message}{Colors.ENDC}", flush=True)
+
+    def send_error_notification(self, error_message):
+        """Odesle zpravu o chybe na Discord s PINGEM."""
+        # Pro chyby preferujeme TEST webhook, pokud neni, tak hlavni
+        webhook_url = os.getenv("DISCORD_TEST_WEBHOOK_URL") or os.getenv("DISCORD_WEBHOOK_URL")
+        
+        if not webhook_url:
+            self.log_to_console("Nemohu odeslat error notifikaci (chybi webhook)", Colors.FAIL)
+            return
+
+        # Vzdy pingneme tebe (admina), kdyz je chyba
+        ping_id = CONFIG.get('discord_user_id_to_ping')
+        ping_content = f"<@{ping_id}>" if ping_id else ""
+        
+        embed = {
+            "title": "KRITICKÁ CHYBA SKRIPTU",
+            "description": f"Vyskytla se chyba při běhu Watchdogu.\n\n**Chyba:**\n```\n{str(error_message)}\n```",
+            "color": 15548997, # Cervena
+            "footer": {"text": f"Čas chyby: {datetime.now().strftime('%d.%m.%Y %H:%M')}"}
+        }
+
+        payload = {
+            "content": f"{ping_content} **POZOR! SKRIPT HLÁSÍ CHYBU!**",
+            "embeds": [embed],
+            "username": "KIV-PC Watchdog Error"
+        }
+
+        try:
+            requests.post(webhook_url, json=payload, timeout=10)
+        except Exception as e:
+            self.log_to_console(f"FATAL: Nepodarilo se odeslat ani error notifikaci: {e}", Colors.FAIL)
 
     def load_users(self):
         """Načte mapování studentů na Discord ID ze souboru."""
@@ -182,7 +214,9 @@ class KIVMonitor:
             else:
                 self.save_cookies(driver.get_cookies())
         except Exception as e:
-            self.log_to_console(f"Chyba loginu: {e}", Colors.FAIL)
+            msg = f"Chyba loginu (Selenium): {e}"
+            self.log_to_console(msg, Colors.FAIL)
+            self.send_error_notification(msg) # Notifikace o chybe
         finally:
             if driver: driver.quit()
 
@@ -201,7 +235,9 @@ class KIVMonitor:
             response.encoding = response.apparent_encoding 
             return response.text
         except Exception as e:
-            self.log_to_console(f"Chyba site (GET): {e}", Colors.FAIL)
+            msg = f"Chyba site (GET): {e}"
+            self.log_to_console(msg, Colors.FAIL)
+            self.send_error_notification(msg) # Notifikace o chybe
             return None
 
     def get_stag_orion_login(self, student_id):
